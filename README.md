@@ -1,2 +1,2 @@
-# azure-pihole
-Azure Container Instance Persistent PiHole
+# terrahole
+Cloud agnostic container persistent PiHole
