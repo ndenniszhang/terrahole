@@ -1,0 +1,24 @@
+# Variables
+RESOURCE_GROUP="rg-azu-e2-dns"
+LOCATION="eastus2"
+
+# Create resource group
+az group create --name $RESOURCE_GROUP --location $LOCATION && \
+
+# Create storage account and file share
+az storage account create --name $STORAGE_ACCOUNT --resource-group $RESOURCE_GROUP --location $LOCATION --sku Standard_LRS  && \
+STORAGE_KEY=$(az storage account keys list --account-name $STORAGE_ACCOUNT --resource-group $RESOURCE_GROUP --query "[0].value" --output tsv) && \
+az storage share create --name $SHARE_NAME --account-name $STORAGE_ACCOUNT --account-key $STORAGE_KEY && \
+
+# Deploy ACI with storage and static public DNS
+az container create --resource-group $RESOURCE_GROUP --name $ACI_NAME --image $IMAGE --dns-name-label $ACI_NAME --os-type Linux --cpu 1 --memory 1 --ports 80 53 --environment-variables TZ=US/Eastern --restart-policy Always --azure-file-volume-account-name $STORAGE_ACCOUNT --azure-file-volume-account-key $STORAGE_KEY --azure-file-volume-share-name $SHARE_NAME --azure-file-volume-mount-path "/etc/pihole" && \
+
+az container show \
+--name $ACI_NAME \
+--resource-group $RESOURCE_GROUP \
+--query "{status:instanceView.state, ip:ipAddress.ip, fqdn:ipAddress.fqdn}" \
+--output table \
+&& \
+
+# Output public URL
+echo "App is accessible at: http://$ACI_NAME.$LOCATION.azurecontainer.io"

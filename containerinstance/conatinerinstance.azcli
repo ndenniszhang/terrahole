@@ -1,0 +1,14 @@
+# Variables
+RESOURCE_GROUP="rg-azu-e2-dns"
+
+# Deploy ACI with storage and static public DNS
+az deployment group validate \
+--resource-group $RESOURCE_GROUP \
+--template-file containerinstance.template.json \
+--parameters @containerinstance.parameters.json && \
+
+az deployment group create \
+--resource-group $RESOURCE_GROUP \
+--template-file containerinstance.template.json \
+--parameters @containerinstance.parameters.json \
+--confirm-with-what-if
